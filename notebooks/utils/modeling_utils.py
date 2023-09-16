@@ -107,3 +107,40 @@ def warn(model_params, best_params):
         if (value_found > space[-2]) or (value_found < space[1]):
             print('warning:', param, 'is at the edge of the search space (value:', value_found, ')')
 
+
+def get_metrics_by_threshold_table(y_test, y_pred_proba, bad_customer_cost_ratio):
+    n_good_clients = (y_test == 0).sum()
+    n_bad_clients = (y_test == 1).sum()
+
+    res = pd.DataFrame()
+    for threshold in np.linspace(0.0, 1.0, 11).tolist():
+        pred = (y_pred_proba >= threshold).astype(int)
+        tp = ((pred == 1) & (y_test == 1)).sum()
+        tn = ((pred == 0) & (y_test == 0)).sum()
+        fp = ((pred == 1) & (y_test == 0)).sum()
+
+        precision = tp / (tp + fp)
+        specificity = tn / n_good_clients
+        sensitivity = tp / n_bad_clients
+
+        row = pd.DataFrame({ 
+            'thres': threshold, 'precision': 100*precision, 'recall/sensitivity': 100*sensitivity,
+            'specificity': 100*specificity, 'lost_good_clients': fp, 'avoided_bad_clients': tp
+            }, index=[0])
+
+        res = pd.concat([res, row]).reset_index(drop=True)
+        if sensitivity == 0: break
+
+    res = res.round(2)
+
+    res['loss'] = res.lost_good_clients 
+    res['gain'] = res.avoided_bad_clients*bad_customer_cost_ratio
+    res['expected_return'] = res.gain - res.loss
+
+    res['bottom_line'] = (n_good_clients - res.lost_good_clients 
+                                    - bad_customer_cost_ratio*(n_bad_clients - res.avoided_bad_clients))
+
+    res['color'] = res.expected_return.apply(lambda x: 
+        'gold' if x == res.expected_return.max() else 'gray')
+                
+    return res
