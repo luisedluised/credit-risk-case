@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 
-def find_positive_and_negative_indicators(df, y):
+def find_positive_and_negative_indicators(df, y, numerical_features, categorical_features):
     df['target'] = y
     top_quantiles_space = np.linspace(.1, 0.9, 9)
 
@@ -63,7 +63,7 @@ def apply_indicators_conditions(df, indicators_conditions):
     return df
 
 
-def sort_categorical_values_by_correlation(df, y):
+def sort_categorical_values_by_correlation(df, y, categorical_features):
     df['target'] = y
     categorical_encoder_frame = pd.DataFrame()
     for feature in categorical_features:
@@ -81,6 +81,7 @@ def sort_categorical_values_by_correlation(df, y):
     return categorical_encoder_frame
 
 def encode_categorical_values(df, categorical_encoder_frame):
+    categorical_features = categorical_encoder_frame.feature.unique()
     for feature in categorical_features:
         encoding_dic = categorical_encoder_frame[categorical_encoder_frame.feature == feature
             ][['value', 'encoded']].set_index('value').to_dict()['encoded']
@@ -106,36 +107,3 @@ def warn(model_params, best_params):
         if (value_found > space[-2]) or (value_found < space[1]):
             print('warning:', param, 'is at the edge of the search space (value:', value_found, ')')
 
-
-
-def selection_round(n_evaluations, model, model_params, all_features, previously_removed):
-    rows = []
-
-    all_tested_feats = [x for x in all_features if x not in previously_removed]
-
-    for i in range(n_evaluations):
-        for tested_feature in (all_tested_feats + [[]])[::-1]:
-            feature_formatted = tested_feature if type(tested_feature) == list else [tested_feature]
-            dropped = list(set(feature_formatted).union(set(previously_removed)))
-            res, _ = test_pipeline(model, model_params, 5, 5, dropped_features=dropped, print_scores=False)
-            res = (pd.DataFrame({
-                    'removed_feature': str(tested_feature),
-                    'test_score': res['best_estimator_test_score']}, index=[0])
-                    )
-            rows.append(res)
-
-    results = pd.concat(rows).reset_index(drop=True)
-
-    results.removed_feature = results.removed_feature.astype(str)
-    results ['avg_test_score'] = results.groupby('removed_feature').test_score.transform('mean')
-    results = results.sort_values('avg_test_score', ascending=False).drop_duplicates('removed_feature').reset_index(drop=True)
-    worse = results.iloc[0]
-    worse_feature = worse.removed_feature
-
-
-    if worse_feature == '[]':
-        print('acabou')
-        return '[]', results
-
-    print('removing', worse_feature)
-    return worse_feature, results
