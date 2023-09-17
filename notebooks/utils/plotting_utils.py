@@ -177,13 +177,14 @@ def plot_default_and_loss(specificity, sensitivity,
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='both', which='both', length=0)
+    ax.yaxis.set_label_position("right")
     
     if highlighted_points is not False:
         plt.scatter(highlighted_points[0], highlighted_points[1], c = 'silver', s = 10, marker = 'o', alpha = 0.8)
 
-    ax.annotate('Highest loss', (0.03, 0.05), xycoords = 'axes fraction',
+    ax.annotate('Highest $ loss', (0.03, 0.05), xycoords = 'axes fraction',
                 fontsize = 8, color = 'white', alpha = 1)
-    ax.annotate('Highest returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+    ax.annotate('Highest $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
                     fontsize = 8, color = 'white', alpha = 1)
 
 
@@ -237,14 +238,15 @@ def plot_specificity_sensitivity(bad_client_incidence, bad_client_cost,
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.tick_params(axis='both', which='both', length=0)
+    ax.yaxis.set_label_position("right")
 
     if highlighted_points is not False:
         plt.scatter(highlighted_points[0], highlighted_points[1],
         c = highlighted_points[3], s = 10, marker = 'o', alpha = 0.8)
 
-    ax.annotate('Highest loss', (0.03, 0.05), xycoords = 'axes fraction',
+    ax.annotate('Highest $ loss', (0.03, 0.05), xycoords = 'axes fraction',
                 fontsize = 8, color = 'white', alpha = 1)
-    ax.annotate('Highest returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+    ax.annotate('Highest $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
                     fontsize = 8, color = 'white', alpha = 1)
 
     #for i, txt in enumerate(highlighted_points[2]):
