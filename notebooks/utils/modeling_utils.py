@@ -144,3 +144,19 @@ def get_metrics_by_threshold_table(y_test, y_pred_proba, bad_customer_cost_ratio
         'gold' if x == res.expected_return.max() else 'gray')
                 
     return res
+
+def model_returns_estimation(bad_client_incidence, bad_client_cost, specificity = 0.3, sensitivity = 0.3):
+    if bad_client_cost < 0:
+        bad_client_cost = -bad_client_cost*-1
+
+    expected_bad_clients = 100*bad_client_incidence
+    expected_good_clients = 100*(1-bad_client_incidence)
+
+    lost_good = expected_good_clients * (1 - specificity)
+    avoided_bad = expected_bad_clients * sensitivity
+
+    expected_return = avoided_bad * bad_client_cost - lost_good
+
+    percentual_expected_return = expected_return/expected_good_clients
+
+    return(percentual_expected_return)

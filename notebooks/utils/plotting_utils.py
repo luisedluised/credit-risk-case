@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from utils.modeling_utils import *
 
 def format_number(number):
     if number > 1000:
@@ -129,5 +130,123 @@ def plot_stacked_risk(input_frame, feature, is_numerical = False, ax = None, hid
         ax.set_xticks(values)
         ax.set_xticklabels(xticklabels, rotation=0, fontsize=9)
 
-## stacked bar plot
-#plot_stacked_risk(df, feature)
+
+
+def plot_default_and_loss(specificity, sensitivity, 
+         bad_client_incidence_range = (0.01, 0.99), bad_client_cost_range = (-5, 10),
+         highlighted_points = False, resolution = 200):
+
+    x, y, c = [], [], []
+    r, g, b = [], [], []
+
+    X = np.linspace(bad_client_incidence_range[0], bad_client_incidence_range[1], resolution)
+    Y = np.logspace(np.log10(bad_client_cost_range[0]), np.log10(bad_client_cost_range[1]), resolution)
+
+    for i in X:
+        for j in Y:
+            expected_return = model_returns_estimation(i, j, specificity = specificity, sensitivity = sensitivity)
+            blue = np.clip(expected_return, 0, 100)
+            red = - np.clip(expected_return, -100, 0)
+
+            x.append(i), y.append(j), r.append(red), b.append(blue)
+
+    r = np.array(r)/np.max(r)
+    b = np.array(b)/np.max(b)
+
+    b = (b**0.6)*0.7
+    r = (r**0.6)*0.7
+    g = b*0.4 + r*0.15
+
+    c = np.array([r, g, b]).T
+
+    plt.figure(figsize=(10.,5))
+    plt.scatter(x, y, c = c, alpha = 0.25, s = 65, marker = 'o')
+    ax = plt.gca()
+
+    ax.set_xlim(bad_client_incidence_range)
+    ax.set_ylim(bad_client_cost_range)
+    plt.yscale("log")
+
+    plt.title('Expected model return as a function of bad_client_incidence & bad_client_cost', fontsize = 10)
+
+    plt.xlabel('bad_client_incidence')
+    plt.ylabel('bad_client_cost')
+                
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.tick_params(axis='both', which='both', length=0)
+    
+    if highlighted_points is not False:
+        plt.scatter(highlighted_points[0], highlighted_points[1], c = 'silver', s = 10, marker = 'o', alpha = 0.8)
+
+    ax.annotate('Highest loss', (0.03, 0.05), xycoords = 'axes fraction',
+                fontsize = 8, color = 'white', alpha = 1)
+    ax.annotate('Highest returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+                    fontsize = 8, color = 'white', alpha = 1)
+
+
+
+def plot_specificity_sensitivity(bad_client_incidence, bad_client_cost, 
+         specificity_range = (0.01, 0.99), sensitivity_range = (0.01, 0.99),
+         highlighted_points = False, resolution = 200):
+
+    x, y, c = [], [], []
+    r, g, b = [], [], []
+
+    for i in np.linspace(specificity_range[0], specificity_range[1], resolution):
+        for j in np.linspace(sensitivity_range[0], sensitivity_range[1], resolution):
+            x.append(i)
+            y.append(j)
+
+            expected_return = model_returns_estimation(bad_client_incidence, bad_client_cost, specificity = i, sensitivity = j)
+
+            red = np.clip(expected_return, -1000, 0) * -1
+            blue = np.clip(expected_return, 0, 1000)
+            green = 0
+
+            r.append(red)
+            g.append(green)
+            b.append(blue)
+
+    r = np.array(r)/np.max(r)
+    b = np.array(b)/np.max(b)
+
+    r = (r**0.6)*0.7
+    b = (b**0.6)*0.7
+    g = b*0.4 + r*0.15
+
+    c = np.array([r, g, b]).T
+
+    plt.figure(figsize=(10.,5))
+    plt.title('Expected model return as a function of sensitivity & sensibility. '
+        'Dots represent different classification threshold choices', fontsize = 9)
+    
+    plt.scatter(x, y, c = c, alpha = 0.3, s = 65,
+                marker = 'o')
+
+    plt.xlabel('specificity')
+    plt.ylabel('sensitivity')
+
+    ax = plt.gca()
+    ax.set_xlim(specificity_range)
+    ax.set_ylim(sensitivity_range)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.tick_params(axis='both', which='both', length=0)
+
+    if highlighted_points is not False:
+        plt.scatter(highlighted_points[0], highlighted_points[1],
+        c = highlighted_points[3], s = 10, marker = 'o', alpha = 0.8)
+
+    ax.annotate('Highest loss', (0.03, 0.05), xycoords = 'axes fraction',
+                fontsize = 8, color = 'white', alpha = 1)
+    ax.annotate('Highest returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+                    fontsize = 8, color = 'white', alpha = 1)
+
+    #for i, txt in enumerate(highlighted_points[2]):
+    #    ax.annotate(txt, (highlighted_points[0][i], highlighted_points[1][i]),
+    #                fontsize = 8, color = 'white', alpha = 1)
