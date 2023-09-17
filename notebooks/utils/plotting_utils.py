@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib
 
 from utils.modeling_utils import *
 
@@ -134,7 +135,7 @@ def plot_stacked_risk(input_frame, feature, is_numerical = False, ax = None, hid
 
 def plot_default_and_loss(specificity, sensitivity, 
          bad_client_incidence_range = (0.01, 0.99), bad_client_cost_range = (-5, 10),
-         highlighted_points = False, resolution = 200):
+         highlighted_points = False, resolution = 200, clip = 100):
 
     x, y, c = [], [], []
     r, g, b = [], [], []
@@ -145,8 +146,8 @@ def plot_default_and_loss(specificity, sensitivity,
     for i in X:
         for j in Y:
             expected_return = model_returns_estimation(i, j, specificity = specificity, sensitivity = sensitivity)
-            blue = np.clip(expected_return, 0, 100)
-            red = - np.clip(expected_return, -100, 0)
+            blue = np.clip(expected_return, 0, clip)
+            red = - np.clip(expected_return, -clip, 0)
 
             x.append(i), y.append(j), r.append(red), b.append(blue)
 
@@ -165,7 +166,15 @@ def plot_default_and_loss(specificity, sensitivity,
 
     ax.set_xlim(bad_client_incidence_range)
     ax.set_ylim(bad_client_cost_range)
+
     plt.yscale("log")
+    yticks = np.logspace(np.log10(bad_client_cost_range[0]), np.log10(bad_client_cost_range[1]), 6)
+    ax.set_yticks(yticks);
+    ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.get_yaxis().set_minor_formatter(matplotlib.ticker.NullFormatter())
+
+    ax.set_yticklabels([round(x, 2) for x in yticks]);
+    
 
     plt.title('Expected model return as a function of bad_client_incidence & bad_client_cost', fontsize = 10)
 
@@ -180,18 +189,17 @@ def plot_default_and_loss(specificity, sensitivity,
     ax.yaxis.set_label_position("right")
     
     if highlighted_points is not False:
-        plt.scatter(highlighted_points[0], highlighted_points[1], c = 'silver', s = 10, marker = 'o', alpha = 0.8)
+        plt.scatter(highlighted_points[0], highlighted_points[1], c = 'gold', s = 6, marker = 'o', alpha = 0.8)
 
-    ax.annotate('Highest $ loss', (0.03, 0.05), xycoords = 'axes fraction',
+    ax.annotate('higher $ loss', (0.03, 0.05), xycoords = 'axes fraction',
                 fontsize = 8, color = 'white', alpha = 1)
-    ax.annotate('Highest $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+    ax.annotate('higher $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
                     fontsize = 8, color = 'white', alpha = 1)
-
 
 
 def plot_specificity_sensitivity(bad_client_incidence, bad_client_cost, 
          specificity_range = (0.01, 0.99), sensitivity_range = (0.01, 0.99),
-         highlighted_points = False, resolution = 200):
+         highlighted_points = False, resolution = 200, clip = 100):
 
     x, y, c = [], [], []
     r, g, b = [], [], []
@@ -203,8 +211,8 @@ def plot_specificity_sensitivity(bad_client_incidence, bad_client_cost,
 
             expected_return = model_returns_estimation(bad_client_incidence, bad_client_cost, specificity = i, sensitivity = j)
 
-            red = np.clip(expected_return, -1000, 0) * -1
-            blue = np.clip(expected_return, 0, 1000)
+            blue = np.clip(expected_return, 0, clip)
+            red = np.clip(expected_return, -clip, 0) * -1
             green = 0
 
             r.append(red)
@@ -242,11 +250,11 @@ def plot_specificity_sensitivity(bad_client_incidence, bad_client_cost,
 
     if highlighted_points is not False:
         plt.scatter(highlighted_points[0], highlighted_points[1],
-        c = highlighted_points[3], s = 10, marker = 'o', alpha = 0.8)
+        c = highlighted_points[3], s = 6, marker = 'o', alpha = 0.8)
 
-    ax.annotate('Highest $ loss', (0.03, 0.05), xycoords = 'axes fraction',
+    ax.annotate('higher $ loss', (0.03, 0.05), xycoords = 'axes fraction',
                 fontsize = 8, color = 'white', alpha = 1)
-    ax.annotate('Highest $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
+    ax.annotate('higher $ returns', (0.85, 1 - 0.05), xycoords = 'axes fraction',
                     fontsize = 8, color = 'white', alpha = 1)
 
     #for i, txt in enumerate(highlighted_points[2]):

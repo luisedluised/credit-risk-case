@@ -141,7 +141,7 @@ def get_metrics_by_threshold_table(y_test, y_pred_proba, bad_customer_cost_ratio
                                     - bad_customer_cost_ratio*(n_bad_clients - res.avoided_bad_clients))
 
     res['color'] = res.expected_return.apply(lambda x: 
-        'gold' if x == res.expected_return.max() else 'gray')
+        'gold' if x == res.expected_return.max() else 'silver')
                 
     return res
 
