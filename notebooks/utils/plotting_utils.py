@@ -131,6 +131,31 @@ def plot_stacked_risk(input_frame, feature, is_numerical = False, ax = None, hid
         ax.set_xticks(values)
         ax.set_xticklabels(xticklabels, rotation=0, fontsize=9)
 
+def plot_roc_and_pr_curves(fpr, tpr, recall, precision, class_imbalance, figsize = (13, 3)):
+    _, ax = plt.subplots(1, 2, figsize=figsize)
+    ax[0].plot(recall, precision, label = 'model')
+    ax[0].plot([0, 1], [class_imbalance, class_imbalance], 'k--', label = 'no skill')
+    ax[0].fill_between(recall, precision, 0, alpha=0.05)
+    ax[0].fill_between([0, 1], [class_imbalance, class_imbalance], color = 'white')
+    ax[0].set_xlabel('recall')
+    ax[0].set_ylabel('precision')
+    ax[0].set_title('precision recall curve')
+    ax[0].yaxis.tick_right()
+    ax[0].set_ylim([-0.05, 1.05])
+    ax[0].legend()
+
+    ax[1].plot(fpr, tpr, label = 'model')
+    ax[1].plot([0, 1], [0, 1], 'k--', label = 'no skill')
+    ax[1].fill_between(fpr, tpr, 0, alpha=0.05)
+    ax[1].fill_between([0, 1], [0, 1], color = 'white')
+    ax[1].legend()
+
+
+    ax[1].set_xlabel('false positive rate')
+    ax[1].set_ylabel('true positive rate')
+    ax[1].set_title('roc curve')
+    ax[1].yaxis.set_label_position("right")
+
 
 
 def plot_default_and_loss(specificity, sensitivity, 
